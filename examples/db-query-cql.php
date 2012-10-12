@@ -19,7 +19,7 @@
  * @package Checkfront
  */
 
-// ini_set('display_errors','On');
+ini_set('display_errors','On');
 include('../lib/CheckfrontAPI.php');
 
 class Checkfront extends CheckfrontAPI {
@@ -59,6 +59,7 @@ class Checkfront extends CheckfrontAPI {
 	}
 }
 
+print_r($data);
 /* 
  * You need to create a new application in your Checkfront Account under
 Manage / Extend / Api and supply the details below. 
@@ -72,21 +73,27 @@ http://www.checkfront.com/developers/api/#endpoints
 */
 
 $Checkfront = new Checkfront(
-	array(
-		'host'=>'demo.checkfront.com', 
-		'consumer_key'  => '5010076404ec1809470508',  
-		'consumer_secret' => 'ba0a5c0c509445024c374fcd264d41e816b02d4e',  
-		'redirect_uri'=>'oob', 
-		'refresh_token' => 'c43c9acf2e209de70f1190d3b7290592',  
-	)
+    array(
+        'host'=>'lahaina.checkfront.com',
+        'consumer_key' => '18271227105077530d0502d',
+        'consumer_secret' => '919fe11477c32fd593ff3c00b857d749528f2a23',
+        'redirect_uri' =>'http://dev.blog.lahaina-accommodations.com/checkfront/PHP-SDK/examples/db-query-cql.php',
+        'refresh_token' => 'a0dabdf75d80f60c4dfee839addcd835',
+    )
 );
 
-
-if($data = $Checkfront->cql('select * from status')) {
-	print_r($data);
-
+if($data = $Checkfront->cql('select * from country')) {
+    print_r($data);
 } elseif($Checkfront->error) {
-	//
-	print "Error: \n" . var_export($Checkfront->error,true);
+    print "Error: \n" . var_export($Checkfront->error,true);
 }
+?>
+
+
+<?
+/* Get item details */
+$Checkfront->get('item/2');
+
+/* Get items rates and availbility*/
+$Checkfront->get('item',array('start_date'=>'2012-04-01','end_date'=>'2012-04-05'));
 ?>

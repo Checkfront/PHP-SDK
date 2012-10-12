@@ -53,7 +53,7 @@ abstract class CheckfrontAPI {
 	private $host = "";
 	public $consumer_key = "";
 	private $consumer_secret= "";
-	private $access_token = 'bcaee19adf2339594384bce2f2044023';
+	private $access_token = '';
 	private $refresh_token = '';
 
 	private $server_token = ''; // legacy 
@@ -89,7 +89,8 @@ abstract class CheckfrontAPI {
 	private function init() {
 		if(isset($this->refresh_token)) {
 			if(!$this->access_token or $this->expire_token < time()) {
-				$this->refresh_token();
+				$this->fetch_token($_GET['code']);
+				die($this->access_token);
 			}
 		}
 	}
@@ -137,11 +138,12 @@ abstract class CheckfrontAPI {
 
 		// pass session id
 		// @see session_create()
+		/*
 		if($this->session_id) {
 			curl_setopt($ch, CURLOPT_COOKIESESSION, true);
 			curl_setopt($ch, CURLOPT_COOKIE, "session_id={$this->session_id}");
 		}
-
+		*/
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 		curl_setopt($ch, CURLOPT_TIMEOUT, $this->api_timeout);
@@ -160,6 +162,8 @@ abstract class CheckfrontAPI {
 
 
 		if($response = curl_exec($ch)) {
+		print_r($response);
+		die('no');
 			curl_close($ch);
 			$response = json_decode($response,true);
 			if($response['error']) {
@@ -254,6 +258,7 @@ abstract class CheckfrontAPI {
 
 
 		$url = $this->oauth_url . '/token/';
+		var_export($this->call($url,$data));
 		if($tokens = $this->call($url,$data)) {
 			if($tokens['error']) {
 				return false;
@@ -262,6 +267,9 @@ abstract class CheckfrontAPI {
 				return true;
 			}
 		}
+		print_r($tokens);
+		print_r($data);
+		die('hi'.$url);
 	}
 
 	/**
