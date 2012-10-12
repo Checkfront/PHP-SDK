@@ -28,7 +28,7 @@ have is:
 
 ```php
 <?
-$Checkfront = new CheckfrontAPI(
+$Checkfront = new Checkfront(
     array(
         'host'=>'demo.checkfront.com',
         'consumer_key'  => '5010076404ec1809470508',

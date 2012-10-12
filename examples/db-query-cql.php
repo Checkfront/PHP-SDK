@@ -59,7 +59,6 @@ class Checkfront extends CheckfrontAPI {
 	}
 }
 
-print_r($data);
 /* 
  * You need to create a new application in your Checkfront Account under
 Manage / Extend / Api and supply the details below. 
@@ -82,11 +81,15 @@ $Checkfront = new Checkfront(
     )
 );
 
+
+
 if($data = $Checkfront->cql('select * from country')) {
     print_r($data);
 } elseif($Checkfront->error) {
     print "Error: \n" . var_export($Checkfront->error,true);
 }
+
+
 ?>
 
 
