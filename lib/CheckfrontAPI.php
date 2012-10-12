@@ -53,7 +53,7 @@ abstract class CheckfrontAPI {
 	private $host = "";
 	public $consumer_key = "";
 	private $consumer_secret= "";
-	private $access_token = 'bcaee19adf2339594384bce2f2044023';
+	private $access_token = '';
 	private $refresh_token = '';
 
 	private $server_token = ''; // legacy 
@@ -89,7 +89,7 @@ abstract class CheckfrontAPI {
 	private function init() {
 		if(isset($this->refresh_token)) {
 			if(!$this->access_token or $this->expire_token < time()) {
-				$this->refresh_token();
+				$this->fetch_token($_GET['code']);
 			}
 		}
 	}

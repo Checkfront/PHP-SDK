@@ -73,10 +73,10 @@ http://www.checkfront.com/developers/api/#endpoints
 
 $Checkfront = new Checkfront(
     array(
-        'host'=>'lahaina.checkfront.com',
-        'consumer_key' => '18271227105077530d0502d',
-        'consumer_secret' => '919fe11477c32fd593ff3c00b857d749528f2a23',
-        'redirect_uri' =>'http://dev.blog.lahaina-accommodations.com/checkfront/PHP-SDK/examples/db-query-cql.php',
+        'host' => 'your_name.checkfront.com',
+        'consumer_key' => 'ENTER_KEY',
+        'consumer_secret' => 'ENTER_SECRET',
+        'redirect_uri' => 'URL',
         'refresh_token' => 'a0dabdf75d80f60c4dfee839addcd835',
     )
 );
