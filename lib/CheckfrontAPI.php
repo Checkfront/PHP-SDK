@@ -51,33 +51,39 @@ abstract class CheckfrontAPI {
 	private $api_timeout = '30';
 
 	private $host = "";
-	public $consumer_key = "";
+	private $consumer_key = "";
 	private $consumer_secret= "";
 	private $access_token = '';
 	private $refresh_token = '';
 
 	private $server_token = ''; // legacy 
 
-	private $api_id = 'UA';
+	private $app_id = 'UA'; // user agent app id
 
-	private $session_id = '';
+	private $session_id = 0;
+
+	private $mode = 'account';  // act on behalf of an 'account', or 'public' resource
 
 	abstract protected function store($data);
 	abstract public function session($session_id,$data);
-
+ 
 	function __construct($config=array(),$session_id='') {
 		$this->host = $config['host'];
-		$this->consumer_key = $config['consumer_key'];
-		$this->consumer_secret = $config['consumer_secret'];
-		$this->redirect_uri = $config['redirect_uri'];
 		$this->oauth_url = "https://{$this->host}/oauth";
 		$this->api_url = "https://{$this->host}/api/{$this->api_version}";
-		$this->app_id = $config['app_id'];
-		$this->client_ip = $config['client_ip'];
-		$this->refresh_token = $config['refresh_token'];
-		$this->session_id = $session_id;
-		$this->account_id = $config['account_id'];
-		$this->server_token = $config['server_token'];
+		
+		if(isset($config['consumer_key'])) $this->consumer_key = $config['consumer_key'];
+		if(isset($config['consumer_secret'])) $this->consumer_secret = $config['consumer_secret'];
+		if(isset($config['server_token'])) $this->server_token = $config['server_token'];
+		if(isset($config['refresh_token'])) $this->refresh_token = $config['refresh_token'];
+		if(isset($config['redirect_uri'])) $this->redirect_uri = $config['redirect_uri'];
+		
+		if(isset($config['app_id'])) $this->app_id = $config['app_id'];
+		if(isset($config['account_id']) and $config['account_id'] > 0) $this->account_id = $config['account_id'];
+		if(isset($config['client_ip'])) $this->client_ip = $config['client_ip'];
+		if(isset($config['mode'])) $this->mode = $config['mode'];
+		if(isset($session_id)) $this->session_id = $session_id;
+
 		$this->tokens();
 	}
 
@@ -85,7 +91,7 @@ abstract class CheckfrontAPI {
 	 * Check and refresh access token if needed.
 	 *
 	 * @return bool 
-	 */
+    */
 	private function init() {
 		if(isset($this->refresh_token)) {
 			if(!$this->access_token or $this->expire_token < time()) {
@@ -121,11 +127,14 @@ abstract class CheckfrontAPI {
 
 		if($this->client_ip) {
 			$headers[] = "X-Forwarded-For: {$this->client_ip}";
-		} else {
+		} elseif( isset($_SERVER['REMOTE_ADDR'])) {
 			$headers[] = "X-Forwarded-For: {$_SERVER['REMOTE_ADDR']}";
 		}
 
-		if($this->account_id) {
+
+		if($this->mode == 'public') {
+			$headers[] = "X-On-Behalf: public";
+		} else if($this->account_id) {
 			$headers[] = "X-On-Behalf: {$this->account_id}";
 		}
 
@@ -160,7 +169,6 @@ abstract class CheckfrontAPI {
 
 
 		if($response = curl_exec($ch)) {
-			curl_close($ch);
 			$response = json_decode($response,true);
 			if($response['error']) {
 				$this->error = array('id'=>$response['error'],'msg'=>$response['error_description']);
@@ -199,7 +207,7 @@ abstract class CheckfrontAPI {
 
 		$this->init();
 
-		$url .= $this->api_url . '/' . $path;
+		$url = $this->api_url . '/' . $path;
 		if($response = $this->call($url,$data)) {
 			if($response['session_id']) {
 				$this->session($response['session_id']);
@@ -251,8 +259,6 @@ abstract class CheckfrontAPI {
 			'redirect_uri'=>$this->redirect_uri,
 			'code'=>$code,
 		);
-
-
 		$url = $this->oauth_url . '/token/';
 		if($tokens = $this->call($url,$data)) {
 			if($tokens['error']) {

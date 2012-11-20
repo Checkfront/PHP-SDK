@@ -19,7 +19,7 @@
  * @package Checkfront
  */
 
-// ini_set('display_errors','On');
+ini_set('display_errors','On');
 include('../lib/CheckfrontAPI.php');
 
 class Checkfront extends CheckfrontAPI {
@@ -72,21 +72,29 @@ http://www.checkfront.com/developers/api/#endpoints
 */
 
 $Checkfront = new Checkfront(
-	array(
-		'host'=>'demo.checkfront.com', 
-		'consumer_key'  => '5010076404ec1809470508',  
-		'consumer_secret' => 'ba0a5c0c509445024c374fcd264d41e816b02d4e',  
-		'redirect_uri'=>'oob', 
-		'refresh_token' => 'c43c9acf2e209de70f1190d3b7290592',  
-	)
+    array(
+        'host' => 'your_name.checkfront.com',
+        'consumer_key' => 'ENTER_KEY',
+        'consumer_secret' => 'ENTER_SECRET',
+        'redirect_uri' => 'oob', // Enter redirect url, or oob
+        'refresh_token' => '',
+    )
 );
 
 
-if($data = $Checkfront->cql('select * from status')) {
-	print_r($data);
 
+if($data = $Checkfront->cql('select * from country')) {
+    print_r($data);
 } elseif($Checkfront->error) {
-	//
-	print "Error: \n" . var_export($Checkfront->error,true);
+    print "Error: \n" . var_export($Checkfront->error,true);
 }
+?>
+
+
+<?
+/* Get item details */
+$Checkfront->get('item/2');
+
+/* Get items rates and availbility*/
+$Checkfront->get('item',array('start_date'=>'2012-04-01','end_date'=>'2012-04-05'));
 ?>
