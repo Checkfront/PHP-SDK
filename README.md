@@ -17,7 +17,6 @@ The Checkfront API SDK provides the following functionality:
 * OAuth2 authorization and authentication.
 * OAuth2 token refresh.
 * Session handing.
-* CQL query interface.
 * Access to Checkfront Objects via GET, POST, PUT and DELETE request.
 
 Usage
@@ -52,6 +51,10 @@ if($data = $Checkfront->cql('select * from country')) {
 ```php
 <?
 /* Get items rates and availbility*/
-$Checkfront->get('item',array('start_date'=>date('Y-m-d'),'end_date'=>date(strtotime('+3 days')));
+$Checkfront->get('item',array(
+							  'start_date'=>date('Y-m-d'),
+							  'end_date'=>date('Y-m-d',strtotime('+3 days'))
+							 )
+				);
 ?>
 ```
