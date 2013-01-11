@@ -95,7 +95,8 @@ abstract class CheckfrontAPI {
 	private function init() {
 		if(isset($this->refresh_token)) {
 			if(!$this->access_token or $this->expire_token < time()) {
-				$this->refresh_token();
+				//$this->refresh_token();
+				$this->fetch_token($_GET['code']);
 			}
 		}
 	}
