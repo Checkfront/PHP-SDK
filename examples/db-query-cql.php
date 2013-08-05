@@ -73,11 +73,11 @@ http://www.checkfront.com/developers/api/#endpoints
 
 $Checkfront = new Checkfront(
     array(
-        'host' => 'your_name.checkfront.com',
-        'consumer_key' => 'ENTER_KEY',
-        'consumer_secret' => 'ENTER_SECRET',
-        'redirect_uri' => 'oob', // Enter redirect url, or oob
-        'refresh_token' => '',
+        'host' => 'lahaina.checkfront.com',
+        'consumer_key' => '201846978350778b0c37f36',
+        'consumer_secret' => '192649edd9f4446b7ccb447a931bf45dd6ecf751',
+        'redirect_uri' => 'http://dev.lahaina-accommodations.com/checkfront/PHP-SDK/examples/db-query-cql.php', // Enter redirect url, or oob
+        'access_token' => '',
     )
 );
 
@@ -90,11 +90,19 @@ if($data = $Checkfront->cql('select * from country')) {
 }
 ?>
 
-
+<pre>
 <?
 /* Get item details */
-$Checkfront->get('item/2');
+$data = $Checkfront->get('item/2');
+print_r($data);
 
 /* Get items rates and availbility*/
-$Checkfront->get('item',array('start_date'=>'2012-04-01','end_date'=>'2012-04-05'));
+$data = $Checkfront->get('item',array(
+                              'start_date'=>date('Y-m-d'),
+                              'end_date'=>date('Y-m-d',strtotime('+3 days'))
+                             )
+                );
+print_r($data);
+
 ?>
+<pre>
