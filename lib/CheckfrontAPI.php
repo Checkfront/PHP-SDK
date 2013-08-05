@@ -45,7 +45,7 @@
 abstract class CheckfrontAPI {
 
 	protected $sdk_version = '1.1';
-	protected $api_version = '2';
+	protected $api_version = '2.1';
 
 	public $error = array();
 	private $api_timeout = '30';
@@ -117,6 +117,8 @@ abstract class CheckfrontAPI {
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_USERAGENT, "Checkfront PHP/SDK {$this->sdk_version} ({$this->app_id})");
 		curl_setopt($ch, CURLOPT_HEADER, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 
 		// set custom headers
 		$headers = array('Accept: application/json');
@@ -153,7 +155,7 @@ abstract class CheckfrontAPI {
 		}
 
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+		//curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 		curl_setopt($ch, CURLOPT_TIMEOUT, $this->api_timeout);
 
 		if($data) {
