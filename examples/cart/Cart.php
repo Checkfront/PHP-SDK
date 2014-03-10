@@ -26,8 +26,7 @@ class Checkfront extends CheckfrontAPI {
 	public $tmp_file = '.checkfront_oauth';
 
 	public function __construct($data) {
-		parent::__construct($data);
-		session_start();
+		parent::__construct($data,session_id());
 	}
 
 	/* DUMMY Data store.  This sample stores oauth tokens in a text file...
@@ -54,7 +53,8 @@ class Checkfront extends CheckfrontAPI {
 	}
 
 	public function session($session_id,$data=array()) {
-		$_SESSION['checkfront']['session_id'] = $session_id;
+		session_id($session_id);
+		if(!empty($data)) $_SESSION = $data;
 	}
 }
 
@@ -73,23 +73,25 @@ http://www.checkfront.com/developers/api/#endpoints
 // a general class that wraps the api along with some custom calls
 class Booking {
 
-	public $cart_id = '';
 	public $cart = array();
+	public $session = array();
 
 	function __construct() {
-
+		// apply a session_id to the request if one is specified
+		if (!empty($_GET['cart_id'])) session_id($_GET['cart_id']);
+		session_start();
 		// create api connection to Checkfront
-		// you can generate oauth values in Add-ons / Api in your account
+		// you can generate a token pair under Manage / Developer in your account
 		$this->Checkfront = new Checkfront(
 			array(
-				'host' => 'your_host.checkfront.com',
-				'consumer_key' => '',
-				'consumer_secret' => '',
-				'redirect_uri' => 'oob',
-				'access_token' => '',
-				'mode' => 'public',
+				'host' => 'your-company.checkfront.com',
+				'auth_type' => 'token',
+				'api_key' => '',
+				'api_secret' => '',
+				'account_id' => 'off',
 			)
 		);
+
 		// init shopping cart
 		$this->cart();
 	}
@@ -102,36 +104,42 @@ class Booking {
 
 	// add slips to the booking session
 	public function set($slips=array()) {
-		$response = $this->Checkfront->post('booking/session',array('slip'=>$slips,'session_id'=>$session_id));
-		$this->cart_id= $response['booking']['session']['id'];
+		$response = $this->Checkfront->post('booking/session',array('slip'=>$slips));
+		$this->Checkfront->set_session($response['booking']['session']['id'], $response['booking']['session']);
 		$this->cart();
 	}
 
 	// get the booking form fields required to make a booking
 	public function form() {
 		$response = $this->Checkfront->get('booking/form');
-		return $response['booking']['form'];
+		return $response['booking_form_ui'];
 	}
 
 	// get cart session
 	public function cart() {
-		if(isset($_GET['cart_id'])) $this->cart_id = $_GET['cart_id'];
-		if($this->cart_id) {
-			$response = $this->Checkfront->post('booking/session',array('session_id'=>$this->cart_id));
-			if($response['booking']['item']) {
-				foreach($response['booking']['item']  as $line_id => $data) {
+		if(!empty($_SESSION)) {
+			$response = $this->Checkfront->get('booking/session');
+			if(!empty($response['booking']['session']['item'])) {
+				foreach($response['booking']['session']['item']  as $line_id => $data) {
 					// store for later
 					$this->cart[$line_id] = $data;
 				}
 			}
+			$this->Checkfront->set_session($response['booking']['session']['id'], $response['booking']['session']);
 		}
 	}
 
 	// create a booking using the session and the posted form fields
 	public function create($form) {
-		$form['session_id'] = $form['cart_id'];
-		if($response = $this->Checkfront->post('booking/create',array('session_id'=>$this->cart_id,'form'=>$form))) {
+		$form['session_id'] = session_id();
+		if($response = $this->Checkfront->post('booking/create',array('form'=>$form))) {
 			return $response;
 		}
 	}
+
+	// clear the current remote session
+	public function clear() {
+		$response = $this->Checkfront->post('booking/session/clear');
+		session_destroy();
+	}	
 }

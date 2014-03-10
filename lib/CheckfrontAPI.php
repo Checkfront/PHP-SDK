@@ -5,7 +5,7 @@
  *
  * @package     CheckfrontAPI
  * @author      Checkfront <code@checkfront.com>
- * @copyright   2008-2012 Checkfront Inc 
+ * @copyright   2008-2014 Checkfront Inc 
  * @license     http://opensource.org/licenses/bsd-license.php New BSD License
  * @link        http://www.checkfront.com/developers/api/
  * @link        https://github.com/Checkfront/PHP-SDK
@@ -42,49 +42,77 @@
  * @access public
  * @package Checkfront
 */
-abstract class CheckfrontAPI {
+class CheckfrontAPI {
 
-	protected $sdk_version = '1.1';
-	protected $api_version = '2';
+	protected $sdk_version = '1.3';
+	protected $api_version = '3.0';
 
 	public $error = array();
 	private $api_timeout = '30';
 
-	private $host = "";
-	private $consumer_key = "";
-	private $consumer_secret= "";
-	private $access_token = '';
-	private $refresh_token = '';
+	// change to the name of your app / integration (shows in log and invoice footer).  maxlength=15
+	private $app_id = 'API'; 
 
-	private $server_token = ''; // legacy 
+	// checkfront host
+	private $host;
 
-	private $app_id = 'UA'; // user agent app id
+	// use oauth2 or token
+	private $auth_type = 'oauth2';
 
-	private $session_id = 0;
+	// oauth2 only:
+	public $consumer_key;
+	private $consumer_secret;
+	private $access_token;
+	private $refresh_token;
 
-	private $mode = 'account';  // act on behalf of an 'account', or 'public' resource
+	// token auth only:
+	private $api_key;
+	private $api_secret;
 
-	abstract protected function store($data);
-	abstract public function session($session_id,$data);
- 
+
+	// set to 'off' to act on behalf of a client / public booking,
+	// or override the autheticated user with an integer (account_id).
+	// defaults to authenticated user.
+	private $account_id;
+
+
+	// over-ride the ip address of the API call.  Set this if you wish to track
+	// another API when creating or updating a booking.
+	private $client_ip;
+	private $session_id;
+
+
+	// use to store API keys, ideally via an extended class.  Not used for token pair auth
+	protected function store($data) {
+	}
+
+	// use to store session if needed for interactive integrations
+	public function session($session_id,$data) {
+	}
+
 	function __construct($config=array(),$session_id='') {
+
 		$this->host = $config['host'];
 		$this->oauth_url = "https://{$this->host}/oauth";
 		$this->api_url = "https://{$this->host}/api/{$this->api_version}";
-		
-		if(isset($config['consumer_key'])) $this->consumer_key = $config['consumer_key'];
-		if(isset($config['consumer_secret'])) $this->consumer_secret = $config['consumer_secret'];
-		if(isset($config['server_token'])) $this->server_token = $config['server_token'];
-		if(isset($config['refresh_token'])) $this->refresh_token = $config['refresh_token'];
-		if(isset($config['redirect_uri'])) $this->redirect_uri = $config['redirect_uri'];
-		
-		if(isset($config['app_id'])) $this->app_id = $config['app_id'];
-		if(isset($config['account_id']) and $config['account_id'] > 0) $this->account_id = $config['account_id'];
-		if(isset($config['client_ip'])) $this->client_ip = $config['client_ip'];
-		if(isset($config['mode'])) $this->mode = $config['mode'];
-		if(isset($session_id)) $this->session_id = $session_id;
 
-		$this->tokens();
+		if(isset($config['app_id'])) $this->app_id = $config['app_id'];
+
+		$this->client_ip= isset($config['client_ip']) ? $config['client_ip'] : '';
+		$this->session_id = isset($session_id) ? $session_id : '';
+		$this->account_id= isset($config['account_id']) ? $config['account_id']: '';
+
+		if($config['auth_type'] == 'token') {
+			$this->api_key = isset($config['api_key']) ? $config['api_key'] : '';
+			$this->api_secret = isset($config['api_secret']) ? $config['api_secret'] : '';
+			$this->auth_type = 'token';
+		} else {
+			$this->auth_type = 'oauth2';
+			$this->consumer_key = isset($config['consumer_key']) ? $config['consumer_key'] : '';
+			$this->consumer_secret = isset($config['consumer_secret']) ? $config['consumer_secret'] : '';
+			$this->redirect_uri = isset($config['redirect_uri']) ? $config['redirect_uri'] : '';
+			$this->tokens();
+		}
 	}
 
 	/**
@@ -93,6 +121,10 @@ abstract class CheckfrontAPI {
 	 * @return bool 
     */
 	private function init() {
+
+		// No OAuth for tokens
+		if($this->auth_type == 'token') return;
+
 		if(isset($this->refresh_token)) {
 			if(!$this->access_token or $this->expire_token < time()) {
 				$this->refresh_token();
@@ -111,7 +143,6 @@ abstract class CheckfrontAPI {
 	 */
 	final private function call($url,$data=array(),$type='') {
 
-
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_USERAGENT, "Checkfront PHP/SDK {$this->sdk_version} ({$this->app_id})");
@@ -120,26 +151,23 @@ abstract class CheckfrontAPI {
 		// set custom headers
 		$headers = array('Accept: application/json');
 
-		// legacy
-		if($this->server_token) {
-			$headers[] = "X-Server-Token: {$this->server_token}";
-		}
-
 		if($this->client_ip) {
 			$headers[] = "X-Forwarded-For: {$this->client_ip}";
-		} elseif( isset($_SERVER['REMOTE_ADDR'])) {
+		} else {
 			$headers[] = "X-Forwarded-For: {$_SERVER['REMOTE_ADDR']}";
 		}
 
-
-		if($this->mode == 'public') {
-			$headers[] = "X-On-Behalf: public";
-		} else if($this->account_id) {
+		if($this->account_id) {
 			$headers[] = "X-On-Behalf: {$this->account_id}";
 		}
 
-		if($this->access_token) {
-			$headers[] = "Authorization: BEARER {$this->access_token}";
+		if($this->auth_type == 'token') {
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($ch, CURLOPT_USERPWD, $this->api_key . ':' . $this->api_secret);
+		} else {
+			if($this->access_token) {
+				$headers[] = "Authorization: BEARER {$this->access_token}";
+			}
 		}
 
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -150,6 +178,7 @@ abstract class CheckfrontAPI {
 			curl_setopt($ch, CURLOPT_COOKIESESSION, true);
 			curl_setopt($ch, CURLOPT_COOKIE, "session_id={$this->session_id}");
 		}
+
 
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
@@ -167,16 +196,20 @@ abstract class CheckfrontAPI {
 			curl_setopt($ch, CURLOPT_HTTPGET, true);
 		}
 
+		/**
+		 * If you get the error "SSL certificate problem: unable to get local issuer certificate",
+		 * download the following file to this directory and uncomment the option below:
+		 * http://curl.haxx.se/ca/cacert.pem
+		 */
+		//curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/cacert.pem');
 
 		if($response = curl_exec($ch)) {
 			$response = json_decode($response,true);
-			if($response['error']) {
-				$this->error = array('id'=>$response['error'],'msg'=>$response['error_description']);
-				return false;
+			if($error = json_last_error()) {
+				$this->error = array('json'=>$error);
 			} else {
 				return $response;
 			}
-
 		} else {
 			$this->error = array('curl'=>curl_error($ch));
 		}
@@ -209,8 +242,8 @@ abstract class CheckfrontAPI {
 
 		$url = $this->api_url . '/' . $path;
 		if($response = $this->call($url,$data)) {
-			if($response['session_id']) {
-				$this->session($response['session_id']);
+			if(!empty($response['booking']['session']['id'])) {
+				$this->session($response['booking']['session']['id']);
 			}
 			return $response;
 		} else {
@@ -259,6 +292,8 @@ abstract class CheckfrontAPI {
 			'redirect_uri'=>$this->redirect_uri,
 			'code'=>$code,
 		);
+
+
 		$url = $this->oauth_url . '/token/';
 		if($tokens = $this->call($url,$data)) {
 			if($tokens['error']) {
@@ -310,7 +345,6 @@ abstract class CheckfrontAPI {
 		return time() + $time - $this->expire_drift;
 	}
 
-
 	/**
 	 * Set access token  
 	 *
@@ -322,7 +356,7 @@ abstract class CheckfrontAPI {
 
 		if($data) {
 			if($data['expires_in']) {
-				$data['expire_token'] = $this->expire_token($data['expire_in']);
+				$data['expire_token'] = $this->expire_token($data['expires_in']);
 			}
 			$this->store(
 				array(
@@ -339,22 +373,6 @@ abstract class CheckfrontAPI {
 		if(isset($data['access_token'])) $this->access_token  = $data['access_token'];
 		if(isset($data['refresh_token'])) $this->refresh_token = $data['refresh_token'];
 		if(isset($data['expire_token'])) $this->expire_token = $data['expire_token'];
-	}
-
-
-	/**
-	 * CQL Query
-	 * @param sting $q SQL style query 
-	 * @return mixed sql results, or false on failure
-	 * @link http://www.checkfront.com/developers/api-cql/
-	 */
-	final public function cql($q) {
-		$this->init();
-		if($data = $this->get('cql',array('q'=>$q))) {
-			return $data;
-		} else {
-			return false;
-		}
 	}
 
 

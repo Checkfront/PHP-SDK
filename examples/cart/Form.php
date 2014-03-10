@@ -21,7 +21,7 @@ class Form {
 	);
 
 	function __construct($data=array(),$values=array()) {
-		$this->fields = $data['fields'];
+		$this->fields = $data;
 
 		// set any values
 		if(count($values)) {
@@ -45,13 +45,13 @@ class Form {
 
 	public function render($field_id) {
 
-		if(isset($this->fields[$field_id])) {
+		if(!empty($this->fields[$field_id])) {
 			$field = $this->fields[$field_id];
 		} else {
 			return false;
 		}
 
-		if(!($type = $field['define']['layout']['type']) or !$this->types[$type]) {
+		if(!isset($field['define']) or !($type = $field['define']['layout']['type']) or !$this->types[$type]) {
 			return false;
 		}
 
@@ -63,14 +63,14 @@ class Form {
 	}
 
 	private function build_text($id,$data) {
-	   $html .= "<input name='{$id}' id='{$id}' type='text' " . $this->build_val($data['value']) ;
-	   if($this->fields[$field_id]['define']['required']) $html .= ' required="required"';
+	   $html = "<input name='{$id}' id='{$id}' type='text' " . $this->build_val($data['value']) ;
+	   if($this->fields[$id]['define']['required']) $html .= ' required="required"';
 	   $html .= " />";
 	   return $html;
 	}
 
 	private function build_p($id,$data) {
-		$html .= '<p>' . $data['value'] . "</p>";
+		$html = '<p>' . $data['value'] . "</p>";
 		return $html;
 	}
 
@@ -79,19 +79,19 @@ class Form {
 	}
 
 	private function build_select($id,$data) {
-		$html  ="<select name='{$name}' id='{$id}'>" . $this->build_select_options($data['define']['layout']['options'],$data['value'],$data['define']['layout']['single']) . "</select></li>";
+		$html ="<select name='{$id}' id='{$id}'>" . $this->build_select_options($data['define']['layout']['options'],$data['value'],!empty($data['define']['layout']['single'])) . "</select></li>";
 		return $html;
 	}
 
 	private function build_radio($id,$data) {
-		$html =	 $this->build_radio_group($data['define']['layout']['options'],$id,$data['value']);
+		$html = $this->build_radio_group($data['define']['layout']['options'],$id,$data['value']);
 		return $html;
 	}
 
 	private function build_checkbox($id,$data) {
 		$html = "<input type='checkbox' name='{$name}' id='{$id}' value='1'";
 		if($data['value']) $html .= ' checked="checked"';
-		$html .=	"/>";
+		$html .= "/>";
 		return $html;
 	}
 
@@ -102,9 +102,10 @@ class Form {
 
 	private function build_radio_group($data,$id,$sel) {
 		if(!is_array($data)) return false;
+		$html = '';
 		foreach($data as $key => $val) {
 			$html .= "<input type='radio' name='{$id}' value='" . $this->escape($val) . "'";
-			if($selected === $key) {
+			if($sel === $key) {
 				$html .= " selected='selected'";
 			}
 

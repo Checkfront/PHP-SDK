@@ -11,11 +11,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 	if($response['request']['status'] == 'OK') {
 		// successful transactions will return a url to be redirected to for payment or an invoice.
-		header("Location: {$response['request']['url']}"); 
+		header("Location: {$response['request']['data']['url']}"); 
 		exit;
 
 	} else {
-		$Form->msg($response['request']['msg'],$response['request']['status']);
+		$Form->msg($response['request']['error']['details'],$response['request']['status']);
 	}
 } else {
 	$Form = new Form($Booking->form());
@@ -32,8 +32,8 @@ input, select, textarea { width: 20em; display: block; }
 </style>
 </head>
 <body>
-<h1>Checkfront Shopping Card Demo</h1>
-<form method="post" action="<?=$_SERVER['SCRIPT_NAME']?>?cart_id=<?=$_GET['cart_id']?>">
+<h1>Checkfront Shopping Cart Demo</h1>
+<form method="post" action="<?php echo $_SERVER['SCRIPT_NAME']?>">
 <fieldset>
 <?php
 echo $Form->msg();
@@ -52,7 +52,8 @@ if(!count($Form->fields)) {
 ?>
 <pre style="margin-left: 10px">
 <strong>Debug Information</strong>
-Cart ID: <input type="text" readonly="readonly" name="cart_id" value="<?=$Booking->cart_id?>" /> 
+Cart ID: <input type="text" readonly="readonly" name="cart_id" value="<?php echo session_id()?>" /> 
+<pre><?php if (!empty($Booking->Checkfront->error)) print_r($Booking->Checkfront->error)?></pre>
 </fieldset>
 </form>
 </body>
