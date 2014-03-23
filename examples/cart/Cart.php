@@ -19,6 +19,7 @@
  * @package Checkfront
  */
 
+ini_set('session.hash_bits_per_character', 5);
 include('../../lib/CheckfrontAPI.php');
 
 class Checkfront extends CheckfrontAPI {
@@ -139,7 +140,7 @@ class Booking {
 
 	// clear the current remote session
 	public function clear() {
-		$response = $this->Checkfront->post('booking/session/clear');
+		$response = $this->Checkfront->get('booking/session/clear');
 		session_destroy();
 	}	
 }
