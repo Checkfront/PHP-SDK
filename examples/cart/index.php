@@ -94,7 +94,7 @@ if(count($Booking->cart)) {
 ?>
 </ul>
 </div>
-<a href="<?php echo $_SERVER['SCRIPT_NAME']?>">Clear session</a>
+<a href="<?php echo $_SERVER['SCRIPT_NAME']?>?reset=1">Clear session</a>
 </form>
 <pre style="margin-left: 10px">
 <strong>Debug Information</strong>
