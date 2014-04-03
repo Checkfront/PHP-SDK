@@ -11,7 +11,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 	if($response['request']['status'] == 'OK') {
 		// successful transactions will return a url to be redirected to for payment or an invoice.
-		header("Location: {$response['request']['data']['url']}"); 
+		header("Location: {$response['request']['data']['url']}");
 		exit;
 
 	} else {
@@ -41,18 +41,20 @@ if(!count($Form->fields)) {
 	echo '<p>ERROR: Cannot fetch fields.</p>';
 } else {
 	foreach($Form->fields as $field_id => $data) {
-		if(!empty($data['define']['layout']['lbl'])) {
-			echo "<label for='{$field_id}'>" . $data['define']['layout']['lbl'] . ':</label>';
+		if(!in_array($field_id, array('msg','errors','mode'))) {
+			if(!empty($data['define']['layout']['lbl'])) {
+				echo "<label for='{$field_id}'>" . $data['define']['layout']['lbl'] . ':</label>';
+			}
+			echo $Form->render($field_id);
+			echo '<br />';
 		}
-		echo $Form->render($field_id);
-		echo '<br />';
 	}
 	echo '<button type="submit"> Continue </button>';
 }
 ?>
 <pre style="margin-left: 10px">
 <strong>Debug Information</strong>
-Cart ID: <input type="text" readonly="readonly" name="cart_id" value="<?php echo session_id()?>" /> 
+Cart ID: <input type="text" readonly="readonly" name="cart_id" value="<?php echo session_id()?>" />
 <pre><?php if (!empty($Booking->Checkfront->error)) print_r($Booking->Checkfront->error)?></pre>
 </fieldset>
 </form>
