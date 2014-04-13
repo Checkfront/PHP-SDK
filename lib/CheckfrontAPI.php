@@ -83,11 +83,11 @@ class CheckfrontAPI {
 
 
 	// use to store API keys, ideally via an extended class.  Not used for token pair auth
-	protected function store($data) {
+	protected function store($data=array()) {
 	}
 
 	// use to store session if needed for interactive integrations
-	public function session($session_id,$data) {
+	public function session($session_id,$data=array()) {
 	}
 
 	function __construct($config=array(),$session_id='') {
