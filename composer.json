@@ -1,0 +1,34 @@
+{
+    "homepage" : "https://github.com/gegere/PHP-SDK",
+    "license" : "MIT",
+    "authors" : [
+        {
+            "name" : "Jason Gegere",
+            "email" : "jason@htmlgraphic.com",
+            "homepage" : "http://htmlgraphic.com"
+        }
+    ],
+    "repositories": {
+        "checkfront-unofficial": {
+            "type": "package",
+            "package": {
+                "name": "Checkfront/PHP-SDK",
+                "version": "3.0",
+                "source": {
+                    "url": "https://github.com/gegere/PHP-SDK.git",
+                    "type": "git",
+                    "reference": "origin/master"
+                    }
+                }
+            }
+    },
+    "minimum-stability" : "dev",
+    "require": {
+        "Checkfront/PHP-SDK": "3.0.*"
+        },
+    "autoload": {
+        "psr-0": {
+            "Checkfront": "vendor/Checkfront/PHP-SDK/lib"
+            }
+        }
+}
