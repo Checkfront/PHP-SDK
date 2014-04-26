@@ -19,9 +19,6 @@ if(isset($_GET['reset'])) {
 	exit;
 }
 
-
-$date = (isset($_GET['date'])) ? date('Y-m-d',strtotime($_GET['date'])) : date('Y-m-d');
-
 header('Content-type: text/html; charset=utf-8');
 ?>
 <html>
