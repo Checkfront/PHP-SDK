@@ -20,6 +20,8 @@ if(isset($_GET['reset'])) {
 }
 
 header('Content-type: text/html; charset=utf-8');
+
+$date = (isset($_GET['date'])) ? date('Y-m-d',strtotime($_GET['date'])) : date('Y-m-d');
 ?>
 <html>
 <head>
@@ -35,8 +37,6 @@ header('Content-type: text/html; charset=utf-8');
 Date: <input type="date" name="date" value="<?php echo $date?>" /> <input type="submit" value=" Search" />
 <ul style="list-style: none; padding:0">
 <?php
-
-$date = (isset($_GET['date'])) ? date('Y-m-d',strtotime($_GET['date'])) : date('Y-m-d');
 
 $items = $Booking->query_inventory(
 	array(
@@ -97,7 +97,5 @@ if(count($Booking->cart)) {
 <strong>Debug Information</strong>
 Cart ID: <input type="text" readonly="readonly" name="cart_id" value="<?php echo session_id()?>" /><br />
 <pre><?php if (!empty($Booking->Checkfront->error)) print_r($Booking->Checkfront->error)?></pre>
-</form>
 </body>
-</head>
 </html>
