@@ -40,8 +40,8 @@ have is:
 $Checkfront = new Checkfront(
     array(
         'host'=>'your-company.checkfront.com',
-        'consumer_key'  => '5010076404ec1809470508',
-        'consumer_secret' => 'ba0a5c0c509445024c374fcd264d41e816b02d4e',
+        'api_key'  => '5010076404ec1809470508',
+        'api_secret' => 'ba0a5c0c509445024c374fcd264d41e816b02d4e',
         'redirect_uri'=>'oob',
     )
 );
