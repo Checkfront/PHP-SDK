@@ -44,7 +44,7 @@
 */
 class CheckfrontAPI {
 
-	protected $sdk_version = '1.3';
+	protected $sdk_version = '1.4';
 	protected $api_version = '3.0';
 
 	public $error = array();

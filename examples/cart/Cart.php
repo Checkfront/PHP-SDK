@@ -26,8 +26,12 @@ class Checkfront extends CheckfrontAPI {
 
 	public $tmp_file = '.checkfront_oauth';
 
-	public function __construct($data) {
-		parent::__construct($data,session_id());
+	public function __construct($data)
+	{
+		if (session_status() === PHP_SESSION_NONE) {
+			session_start();
+		}
+		parent::__construct($data, $_SESSION['booking_session_id']);
 	}
 
 	/* DUMMY Data store.  This sample stores oauth tokens in a text file...
@@ -43,9 +47,10 @@ class Checkfront extends CheckfrontAPI {
 	 * param array $data ( access_token, refresh_token, expire_token )
 	 * return array
 	 */
-	final protected function store($data=array()) {
+	final protected function store($data = array())
+	{
 		$tmp_file = sys_get_temp_dir() . DIRECTORY_SEPARATOR. $this->tmp_file;
-		if(count($data)  ) {
+		if (!empty($data)) {
 			file_put_contents($tmp_file,json_encode($data,true));
 		} elseif(is_file($tmp_file)) {
 			$data = json_decode(trim(file_get_contents($tmp_file)),true);
@@ -53,9 +58,24 @@ class Checkfront extends CheckfrontAPI {
 		return $data;
 	}
 
-	public function session($session_id,$data=array()) {
-		session_id($session_id);
-		if(!empty($data)) $_SESSION = $data;
+	public function session($session_id, $data = array())
+	{
+		$_SESSION['booking_session']    = $data;
+		$_SESSION['booking_session_id'] = $session_id;
+	}
+
+	public function session_clear()
+	{
+		unset($_SESSION['booking_session'], $_SESSION['booking_session_id']);
+		parent::session_clear();
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function has_active_session()
+	{
+		return !empty($_SESSION['booking_session_id']);
 	}
 }
 
@@ -77,10 +97,8 @@ class Booking {
 	public $cart = array();
 	public $session = array();
 
-	function __construct() {
-		// apply a session_id to the request if one is specified
-		if (!empty($_GET['cart_id'])) session_id($_GET['cart_id']);
-		session_start();
+	public function __construct()
+	{
 		// create api connection to Checkfront
 		// you can generate a token pair under Manage / Developer in your account
 		$this->Checkfront = new Checkfront(
@@ -97,32 +115,41 @@ class Booking {
 		$this->cart();
 	}
 
-	// fetch items from inventory based on date
-	public function query_inventory($data) {
-		$response = $this->Checkfront->get('item',array('start_date'=>$data['start_date'],'end_date'=>$data['end_date']));
+	/**
+	 * fetch items from inventory based on date
+	 * @param array $query
+	 * @return array items
+	 */
+	public function query_inventory($query)
+	{
+		$response = $this->Checkfront->get('item', $query);
+
 		return $response['items'];
 	}
 
 	// add slips to the booking session
-	public function set($slips=array()) {
+	public function set($slips = array())
+	{
 		$response = $this->Checkfront->post('booking/session',array('slip'=>$slips));
 		$this->Checkfront->set_session($response['booking']['session']['id'], $response['booking']['session']);
 		$this->cart();
 	}
 
 	// get the booking form fields required to make a booking
-	public function form() {
+	public function form()
+	{
 		$response = $this->Checkfront->get('booking/form');
+
 		return $response['booking_form_ui'];
 	}
 
 	// get cart session
-	public function cart() {
-		if(!empty($_SESSION)) {
+	public function cart()
+	{
+		if ($this->Checkfront->has_active_session()) {
 			$response = $this->Checkfront->get('booking/session');
 			if(!empty($response['booking']['session']['item'])) {
 				foreach($response['booking']['session']['item']  as $line_id => $data) {
-					// store for later
 					$this->cart[$line_id] = $data;
 				}
 			}
@@ -130,17 +157,21 @@ class Booking {
 		}
 	}
 
-	// create a booking using the session and the posted form fields
-	public function create($form) {
-		$form['session_id'] = session_id();
+	/**
+	 * create a booking using the session and the posted form fields
+	 * @param array $form
+	 */
+	public function create(array $form)
+	{
 		if($response = $this->Checkfront->post('booking/create',array('form'=>$form))) {
 			return $response;
 		}
 	}
 
 	// clear the current remote session
-	public function clear() {
+	public function clear()
+	{
 		$response = $this->Checkfront->get('booking/session/clear');
-		session_destroy();
+		$this->Checkfront->session_clear();
 	}	
 }
