@@ -12,10 +12,7 @@ is licensed under the Apache Licence, Version 2.0
 Updates
 -------
 
-* The 'Cart' example has been given a few quick fixes for v3 API support, using token pair auth.
-* The CheckfrontAPI library now supports connecting to the v3 API, as well as features like token pair authentication
-* New/updated examples are in the works.
-* See our v3 API documentation for more information.
+See [CHANGELOG.md](CHANGELOG.md)
 
 
 Features

@@ -47,7 +47,7 @@ $items = $Booking->query_inventory(
 	)
 );
 
-if(count($items)) {
+if (!empty($items)) {
 	$c = 0;
 	foreach($items as $item_id => $item) {
 		if (empty($item['rate']['slip'])) continue;
@@ -82,8 +82,8 @@ if(count($Booking->cart)) {
 	echo "<li><span style='font-family:monospace;font-size: .9em; color: #333'>Sub-total: {$_SESSION['sub_total']}<br/>";	
 	echo "Tax: {$_SESSION['tax_total']}<br/>";
 	echo "Total: {$_SESSION['total']}</span></li>";
-	echo '<li><input type="submit" name="create" value=" Book Now " /></li>';
-	echo '<li><input type="button" name="cancel" value=" Clear All " onClick="window.location=\'' . $_SERVER['SCRIPT_NAME'] . '?reset=1\';" /></li>';
+	echo '<li><button type="submit" name="create">Book Now</button></li>';
+	echo '<li><button type="button" name="cancel" onClick="window.location=\'' . $_SERVER['SCRIPT_NAME'] . '?reset=1\';">Clear All</button></li>';
 	
 } else {
 	echo '<p>EMPTY</p>';

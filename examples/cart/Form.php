@@ -89,7 +89,7 @@ class Form {
 	}
 
 	private function build_checkbox($id,$data) {
-		$html = "<input type='checkbox' name='{$name}' id='{$id}' value='1'";
+		$html = "<input type='checkbox' name='{$id}' id='{$id}' value='1'";
 		if($data['value']) $html .= ' checked="checked"';
 		$html .= "/>";
 		return $html;
